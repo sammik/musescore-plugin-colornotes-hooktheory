@@ -130,7 +130,7 @@ MuseScore {
             Button {
                 id: colorize
                 width: parent.width
-                text: "Aply colors"
+                text: "Apply colors"
                 onClicked: applyToNotesInSelection(colorNote)
             }
             ToolSeparator {
