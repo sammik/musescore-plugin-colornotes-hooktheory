@@ -14,9 +14,12 @@ import QtQuick.Window 2.2
 
 
 MuseScore {
-    version:  "1.0"
+    version:  "1.1"
     description: qsTr("This plugin colors notes in the selection depending on their pitch in Hooktheory Hookpad style")
     menuPath: "Plugins.Color Notes - Hooktheory"
+    
+    requiresScore: false
+    
     
     readonly property var colors : [ // "#rrggbb" with rr, gg, and bb being the hex values for red, green, and blue, respectively
       "#ff0000", // I.
@@ -40,14 +43,17 @@ MuseScore {
     // or, if nothing is selected, in the entire score
 
     function applyToNotesInSelection(func, restore) {
-        var fullScore = !curScore.selection.elements.length
+        if (!curScore) 
+            return
+        
+        var fullScore = !(curScore.selection.elements.length > 1)
         if (fullScore) {
-              cmd("select-all")
-              curScore.startCmd()
+            cmd("select-all")
+            curScore.startCmd()
         }
         for (var i in curScore.selection.elements)
             if (curScore.selection.elements[i].pitch)
-                    func(curScore.selection.elements[i], restore)
+                func(curScore.selection.elements[i], restore)
         if (fullScore) {
             curScore.endCmd()
             cmd("escape")
