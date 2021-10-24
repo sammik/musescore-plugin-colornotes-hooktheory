@@ -1,6 +1,8 @@
 # musescore-plugin-colornotes-hooktheory
 This plugin colors notes in the selection depending on their pitch in "Hooktheory Hookpad" style (and more).
 
+![Screenshot](colornotes_hook.png)
+
 ## Donate
 If You found it useful, You can [buy me a beer](https://www.paypal.com/donate?business=8R9HV9AM4VFRS&no_recurring=0&item_name=Musescore+Plugins%0A+-+Scordatura%0A-+Colornotes+%22Hook+theory%22%0A-+Colornotes+Strings&currency_code=EUR).
 Thank You!
