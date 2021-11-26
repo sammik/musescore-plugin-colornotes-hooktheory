@@ -15,56 +15,69 @@ import QtQuick.Window 2.2
 
 MuseScore {
     version:  "1.1"
-    description: qsTr("This plugin colors notes in the selection depending on their pitch in Hooktheory Hookpad style")
-    menuPath: "Plugins.Color Notes - Hooktheory - pitch based"
+    description: qsTr("This plugin colors notes in the selection depending on their names in Hooktheory Hookpad style")
+    menuPath: "Plugins.Color Notes - Hooktheory - name based"
     
     requiresScore: false
     
+    property var score: null
+    property var keysig: 0
     
     readonly property var colors : [ // "#rrggbb" with rr, gg, and bb being the hex values for red, green, and blue, respectively
-      "#ff0000", // I.
-      "#ffb014", // II.
-      "#efe600", // III.
-      "#00d300", // IV.
-      "#4800ff", // V.
-      "#b800e5", // VI.
-      "#ff00cb"  // VII.
+      "#00d300", // "F"
+      "#ff0000", // "C"
+      "#4800ff", // "G"
+      "#ffb014", // "D"
+      "#b800e5", // "A"
+      "#efe600", // "E"
+      "#ff00cb"  // "B"
       ]
     readonly property string black : "#000000"
-    readonly property string gray : "#333333"
+    readonly property string gray : "#555555"
     
-    readonly property var scale : [0, , 1, , 2, 3, , 4, , 5, , 6]
-    readonly property var modus : [0, 2, 4, 5, 7, 9, 11]
-
-    property var modalIndex : modalBox.currentIndex
     property var tonalCenter : tonalBox.currentIndex
+    property var mode: modalBox.currentIndex
     
     // Apply the given function to all notes (elements with pitch) in selection
-    // or, if nothing, or just single element is selected, in the entire score
+    // or, if nothing is selected, in the entire score
 
     function applyToNotesInSelection(func, restore) {
-        if (!curScore) 
+        if (!score) 
             return
         
-        var fullScore = !(curScore.selection.elements.length > 1)
+        var fullScore = !(score.selection.elements.length > 1)
         if (fullScore) {
             cmd("select-all")
-            curScore.startCmd()
+            score.startCmd()
         }
-        for (var i in curScore.selection.elements)
-            if (curScore.selection.elements[i].pitch)
-                func(curScore.selection.elements[i], restore)
+        for (var i in score.selection.elements)
+            if (score.selection.elements[i].pitch)
+                func(score.selection.elements[i], restore)
         if (fullScore) {
-            curScore.endCmd()
+            score.endCmd()
             cmd("escape")
         }
     }
 
     function colorNote(note, restore) {
-        console.log(note.pitch, ((note.pitch + modus[modalIndex]) % 12), ((scale[(note.pitch + modus[modalIndex] + 12 - tonalCenter) % 12] + 7 - modalIndex) % 7));
-        var color = (!restore) ? colors[(scale[(note.pitch + modus[modalIndex] + 12 - tonalCenter) % 12] + (modCenter.checkState == Qt.Checked ? (7 - modalIndex) : 0)) % 7] || gray : black;
-        //var color = (!restore) ? colors[scale[(note.pitch + modus[modalIndex] + 12 - tonalCenter) % 12]] || gray : black;
-         
+        var color;
+        var tpc = note.tpc;
+        var center = tonalCenter - ( (mode * 2 + 1) % 7 - 1 );
+        
+        if (restore) {
+            color = black;
+        } 
+        else { 
+            if ( noAcc.checkState == Qt.Checked || tpc > (center + 5) && tpc < (center + 13) ){
+                var colorIndex = ( tpc + 22 + ( noAcc.checkState == Qt.Checked || modCenter.checkState == Qt.Checked ? 0 : mode * 2 ) - tonalCenter ) % 7;
+                console.log(colorIndex);
+                color = colors[colorIndex];
+            } 
+            else {
+                color = gray;
+            }
+        }
+        
         note.color = color;
         
         if (note.accidental) {
@@ -79,16 +92,34 @@ MuseScore {
             }
         }
     }
+    
+    function updateCurrentScore() {
+        if (curScore && !curScore.is(score)) {
+            score = curScore;
+        } else if (score && !curScore) {
+            score = null;
+        }
+        if ( score && !(keysig == score.keysig) ) {
+            keysig = score.keysig;
+            console.log("change")
+            tonalBox.currentIndex = 7 + (score.keysig || 0);
+        }
+    }
+    
+    onScoreStateChanged: {
+        updateCurrentScore();
+    }
 
     onRun: {
         console.log("hello hookstyle colornotes");
         window.visible = true
+        updateCurrentScore();
     }
     
     Window {
         id : window
         width : 200;
-        height : 400
+        height : 420
         visible: true
         
         Label {
@@ -96,7 +127,7 @@ MuseScore {
             width: column.width
             topPadding : 6
             wrapMode : Text.WordWrap
-            text : qsTr("<font color=\"#ff0000\">C</font><font color=\"#ffb014\">o</font><font color=\"#efe600\">l</font><font color=\"#ffb014\">o</font><font color=\"#00d300\">r</font><font color=\"#4800ff\">i</font><font color=\"#b800e5\">z</font><font color=\"#ff00cb\">e</font> notes in style of 'hooktheory.com', based on note pitch.")
+            text : qsTr("<font color=\"#ff0000\">C</font><font color=\"#ffb014\">o</font><font color=\"#efe600\">l</font><font color=\"#ffb014\">o</font><font color=\"#00d300\">r</font><font color=\"#4800ff\">i</font><font color=\"#b800e5\">z</font><font color=\"#ff00cb\">e</font> notes in style of 'hooktheory.com' based on note names.")
             anchors.horizontalCenter : parent.horizontalCenter
         }
         
@@ -114,11 +145,17 @@ MuseScore {
             ComboBox {
                 width: parent.width
                 id: tonalBox
-                model: ["C", "C# / Db", "D", "D#/Eb", "E", "F", "F#/Gb", "G", "G#/Ab", "A", "A#/Bb", "B"]
+                model: ["Cb", "Gb", "Db", "Ab", "Eb", "Bb", "F", "C", "G", "D", "A", "E", "B", "F#", "C#"]
+                currentIndex: 7
+            }
+            CheckBox {
+                id: noAcc
+                text: "Ignore accidentals"
             }
             CheckBox {
                 id: modCenter
                 text: "Modus base center"
+                visible: noAcc.checkState !== Qt.Checked
             }
             ToolSeparator {
                 width: parent.width
@@ -127,11 +164,13 @@ MuseScore {
             Label {
                 font.pointSize : 12
                 text : qsTr("Select modus")
+                visible: noAcc.checkState !== Qt.Checked
             }
             ComboBox {
                 width: parent.width
                 id: modalBox
                 model: ["Major", "Dorian", "Phrygian", "Lydian", "Mixolydian", "Minor", "Locrian"]
+                visible: noAcc.checkState !== Qt.Checked
             }
             Button {
                 id: colorize
