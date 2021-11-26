@@ -40,7 +40,7 @@ MuseScore {
     property var tonalCenter : tonalBox.currentIndex
     
     // Apply the given function to all notes (elements with pitch) in selection
-    // or, if nothing is selected, in the entire score
+    // or, if nothing, or just single element is selected, in the entire score
 
     function applyToNotesInSelection(func, restore) {
         if (!curScore) 
@@ -96,7 +96,7 @@ MuseScore {
             width: column.width
             topPadding : 6
             wrapMode : Text.WordWrap
-            text : qsTr("<font color=\"#ff0000\">C</font><font color=\"#ffb014\">o</font><font color=\"#efe600\">l</font><font color=\"#ffb014\">o</font><font color=\"#00d300\">r</font><font color=\"#4800ff\">i</font><font color=\"#b800e5\">z</font><font color=\"#ff00cb\">e</font> notes in style of 'hooktheory.com'.")
+            text : qsTr("<font color=\"#ff0000\">C</font><font color=\"#ffb014\">o</font><font color=\"#efe600\">l</font><font color=\"#ffb014\">o</font><font color=\"#00d300\">r</font><font color=\"#4800ff\">i</font><font color=\"#b800e5\">z</font><font color=\"#ff00cb\">e</font> notes in style of 'hooktheory.com', based on note pitch.")
             anchors.horizontalCenter : parent.horizontalCenter
         }
         
