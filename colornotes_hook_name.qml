@@ -121,6 +121,7 @@ MuseScore {
         width : 200;
         height : 420
         visible: true
+        flags: Qt.Tool
         
         Label {
             id: label
